@@ -50,6 +50,14 @@ encontra :: Int -> [a] -> a
 encontra 0 (x:_) = x
 encontra n (_:xs) = encontra (n-1) xs
 
+tamanho :: [a] -> Int
+tamanho [] = 0
+tamanho (_:xs) = 1 + tamanho xs
+
+concat :: [Int] -> [Int] -> [Int]
+concat [] ys = ys
+concat (x:xs) ys = x : concat xs ys
+
 
 
 main :: IO ()

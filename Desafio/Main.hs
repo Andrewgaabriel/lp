@@ -31,19 +31,19 @@ natAdd Zero n = n
 natAdd (Suc m) n = Suc (natAdd m n)
 
 
-{- Subtração -}
-natSub :: Nat -> Nat -> Nat
-natSub Zero _ = Zero
-natSub n Zero = n
-natSub (Suc m) (Suc n) = natSub m n
-
 
 {- Multiplicação -}
 natMul :: Nat -> Nat -> Nat
-natMul Zero _ = Zero
-natMul (Suc Zero) n = n
-natMul (Suc m) n = natAdd n (natMul m n)
+natMul Zero _ = Zero -- Zero * n = Zero
+natMul (Suc Zero) n = n -- Um * n = n
+natMul (Suc m) n = natAdd n (natMul m n) -- (m+1) * n = n + m * n
 
+
+{- Subtração -}
+natSub :: Nat -> Nat -> Nat
+natSub Zero _ = Zero -- Zero - n = Zero
+natSub n Zero = n -- n - Zero = n
+natSub (Suc m) (Suc n) = natSub m n -- (m+1) - (n+1) = m - n
 
 
 
