@@ -6,6 +6,7 @@ import Data.Char
 data Expr = BTrue
           | BFalse
           | Num Int
+          | Records [(String, Expr)]
           | Add Expr Expr
           | And Expr Expr
           | Sub Expr Expr
@@ -16,7 +17,6 @@ data Expr = BTrue
           | Var String
           | Lam String Ty Expr
           | App Expr Expr
-          | Records [(String, Expr)]
           | GetFromRecord Expr String
           deriving (Show, Eq) 
 
@@ -51,8 +51,8 @@ data Expr = BTrue
 
 data Ty = TBool
         | TNum
+        | TRecord
         | TFun Ty Ty
-        | TRecord [(String, Ty)]
         deriving (Show, Eq)
 
 

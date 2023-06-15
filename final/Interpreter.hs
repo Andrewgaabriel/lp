@@ -13,7 +13,6 @@ isValue BTrue = True
 isValue BFalse = True
 isValue (Num n) = True
 isValue (Lam _ _ _) = True
-isValue (Var _) = True
 isValue _ = False
 
 
@@ -46,20 +45,15 @@ step (If e1 e2 e3) = If (step e1) e2 e3
 step (App (Lam x t e1) e2)| isValue e2 = subst x e2 e1
                           | otherwise = App (Lam x t e1) (step e2)
 step (App e1 e2) = App (step e1) e2
-step (Records []) = Records []
--- Ele vai tratar a expressão calculado pelo step como um par, e vai adicionar esse par na lista de pares
-
--- TALVEZ NÃO DEVA EXISTIR O TRATAMENTO DE RECORDS PORQUE ELES SÃO TRATADOS COMO VALORES??
-step (Records ((label, expressao):resto)) | isValue expressao = Records ((label, expressao):resto)
-                           | otherwise = Records ((label, step expressao):resto)
-step (GetFromRecord (Records ((label, expressao):resto)) label2) | label == label2 = expressao
-                                                                 | otherwise = GetFromRecord (Records resto) label2
-step (GetFromRecord (Records []) label2) = GetFromRecord (Records []) label2
+step (GetFromRecord (Records []) alvo) = GetFromRecord (Records []) alvo
+step (GetFromRecord (Records ((label, expressao):resto)) alvo) | label == alvo = expressao
+                                                               | otherwise = GetFromRecord (Records resto) alvo
 step (GetFromRecord e label) = GetFromRecord (step e) label
+
 
 -- Para testar:
 -- step (Records [("nome", Var "Andrew"), ("idade", Num 20)])
--- Records [("nome",Var "Andrew"),("idade",Num 20)]
+-- Records [("nome",Var "Andrew"),("idade",Num 20)] -------------------------------------isso é valido?
 -- step (GetFromRecord (Records [("nome", Var "Andrew"), ("idade", Num 20)]) "nome")
 -- Var "Andrew"
 
@@ -72,13 +66,8 @@ step (GetFromRecord e label) = GetFromRecord (step e) label
 
 
 eval :: Expr -> Expr
-eval BTrue = BTrue
-eval BFalse = BFalse
-eval (Num x) = Num x
-eval e' = eval (step e')
-
-
-
+eval e | isValue e = e
+       | otherwise = eval (step e)
 
 
 -- subst <variável> <valor> <expressão onde a variável vai ser substituida pelo valor passado>

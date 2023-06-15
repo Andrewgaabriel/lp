@@ -16,6 +16,7 @@ typeof :: Ctx -> Expr -> Maybe Ty
 typeof ctx BTrue = Just TBool
 typeof ctx BFalse = Just TBool
 typeof ctx (Num _) = Just TNum
+typeof ctx (Records _) = Just TRecord
 typeof ctx (Add e1 e2) = 
     case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
@@ -59,18 +60,9 @@ typeof ctx (App e1 e2) =
                                             Just t2
                                          else
                                             Nothing
-typeof ctx (Records []) = Just (TRecord [])
-typeof ctx (Records ((s, e):xs)) = 
-    case typeof ctx e of
-        Just t -> case typeof ctx (Records xs) of
-                    Just (TRecord xs) -> Just (TRecord ((s, t):xs))
-                    _            -> Nothing
-        _      -> Nothing
-typeof ctx (GetFromRecord ex str) = 
-    case typeof ctx ex of
-        Just (TRecord xs) -> case lookup str xs of
-                                Just t -> Just t
-                                _      -> Nothing
+typeof ctx (GetFromRecord record alvo) = 
+    case typeof ctx record of
+        Just TRecord -> Just TRecord
         _            -> Nothing
 
 
