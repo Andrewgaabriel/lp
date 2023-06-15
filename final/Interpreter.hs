@@ -3,6 +3,13 @@ module Interpreter where
 import Lexer
 import Parser
 
+isValue :: Expr -> Bool
+isValue BTrue = True
+isValue BFalse = True
+isValue (Num n) = True
+isValue (Lam _ _ _) = True
+isValue _ = False
+
 step :: Expr -> Expr
 step (Add (Num n1) (Num n2)) = Num (n1 + n2)
 step (Add (Num n) e2) = Add (Num n) (step e2)
@@ -25,10 +32,33 @@ step (Xor e1 e2) = Xor (step e1) e2
 step (If BTrue e1 e2) = e1
 step (If BFalse e1 e2) = e2
 step (If e1 e2 e3) = If (step e1) e2 e3
--- If <condicao> <expressao se verdade> <expressao se falso>  
+step (App (Lam x t e1) e2)| isValue e2 = subst x e2 e1
+                          | otherwise = App (Lam x t e1) (step e2)
+step (App e1 e2) = App (step e1) e2
 
 eval :: Expr -> Expr
 eval BTrue = BTrue
 eval BFalse = BFalse
 eval (Num x) = Num x
 eval e' = eval (step e')
+
+-- subst <variável> <valor> <expressão onde a variável vai ser substituida pelo valor passado>
+subst :: String -> Expr -> Expr -> Expr
+subst x n BTrue = BTrue
+subst x n BFalse = BFalse
+subst x n (Num y) = Num y
+subst x n (Add e1 e2) = Add (subst x n e1) (subst x n e2)
+subst x n (Sub e1 e2) = Sub (subst x n e1) (subst x n e2)
+subst x n (Mul e1 e2) = Mul (subst x n e1) (subst x n e2)
+subst x n (And e1 e2) = And (subst x n e1) (subst x n e2)
+subst x n (Or e1 e2) = Or (subst x n e1) (subst x n e2)
+subst x n (Xor e1 e2) = Xor (subst x n e1) (subst x n e2)
+subst x n (If e1 e2 e3) = If (subst x n e1) (subst x n e2) (subst x n e3)
+
+
+subst x n (Var v) | x == v = n
+                  | otherwise = Var v
+subst x n (Lam v t e) = Lam v t (subst x n e)
+subst x n (App e1 e2) = App (subst x n e1) (subst x n e2)
+
+

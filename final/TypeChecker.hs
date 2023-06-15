@@ -3,48 +3,59 @@ module TypeChecker where
 import Lexer
 import Parser
 
+
+type Ctx = [(String, Ty)]
+
 ---  |- == typeOf
-typeof :: Expr -> Maybe Ty
-typeof BTrue = Just TBool
-typeof BFalse = Just TBool
-typeof (Num _) = Just TNum
-typeof (Add e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof :: Ctx -> Expr -> Maybe Ty
+typeof ctx BTrue = Just TBool
+typeof ctx BFalse = Just TBool
+typeof ctx (Num _) = Just TNum
+typeof ctx (Add e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
         _                        -> Nothing
-typeof (Sub e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof ctx (Sub e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
         _                        -> Nothing
-typeof (Mul e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof ctx (Mul e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
         _                        -> Nothing
-typeof (And e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof ctx (And e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TBool, Just TBool) -> Just TBool
         _                        -> Nothing
-typeof (Or e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof ctx (Or e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TBool, Just TBool) -> Just TBool
         _                        -> Nothing
-typeof (Xor e1 e2) = 
-    case (typeof e1, typeof e2) of
+typeof ctx (Xor e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
         (Just TBool, Just TBool) -> Just TBool
         _                        -> Nothing
-typeof (If e1 e2 e3) =
-    case typeof e1 of 
-      (Just TBool) -> case (typeof e2, typeof e3) of
+typeof ctx (If e1 e2 e3) =
+    case typeof ctx e1 of 
+      (Just TBool) -> case (typeof ctx e2, typeof ctx e3) of
                           (Just t1, Just t2) -> if t1 == t2 then
                                                   Just t1
                                                 else 
                                                   Nothing
                           _                   -> Nothing
       _            -> Nothing
+typeof ctx (Lam v t1 b) = case typeof ((v, t1):ctx) b of
+                            Just t2 -> Just (TFun t1 t2)
+                            _ -> Nothing
+typeof ctx (App e1 e2) =
+    case (typeof ctx e1, typeof ctx e2) of
+        (Just (TFun t1 t2), Just t3) -> if t1 == t3 then
+                                            Just t2
+                                         else
+                                            Nothing
 
 
 typecheck :: Expr -> Expr
-typecheck e = case typeof e of
+typecheck e = case typeof [] e of
                 Just _  -> e
                 Nothing -> error "Type error!"
-

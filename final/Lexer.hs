@@ -13,10 +13,14 @@ data Expr = BTrue
           | If Expr Expr Expr
           | Or Expr Expr
           | Xor Expr Expr
+          | Var String
+          | Lam String Ty Expr
+          | App Expr Expr
           deriving (Show, Eq) 
 
 data Ty = TBool
         | TNum
+        | TFun Ty Ty
         deriving (Show, Eq)
 
 
