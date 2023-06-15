@@ -4,7 +4,12 @@ import Lexer
 import Parser
 
 
+
+
+
 type Ctx = [(String, Ty)]
+
+
 
 ---  |- == typeOf
 typeof :: Ctx -> Expr -> Maybe Ty
@@ -44,6 +49,7 @@ typeof ctx (If e1 e2 e3) =
                                                   Nothing
                           _                   -> Nothing
       _            -> Nothing
+typeof ctx (Var v) = lookup v ctx
 typeof ctx (Lam v t1 b) = case typeof ((v, t1):ctx) b of
                             Just t2 -> Just (TFun t1 t2)
                             _ -> Nothing
@@ -53,6 +59,20 @@ typeof ctx (App e1 e2) =
                                             Just t2
                                          else
                                             Nothing
+typeof ctx (Records []) = Just (TRecord [])
+typeof ctx (Records ((s, e):xs)) = 
+    case typeof ctx e of
+        Just t -> case typeof ctx (Records xs) of
+                    Just (TRecord xs) -> Just (TRecord ((s, t):xs))
+                    _            -> Nothing
+        _      -> Nothing
+typeof ctx (GetFromRecord ex str) = 
+    case typeof ctx ex of
+        Just (TRecord xs) -> case lookup str xs of
+                                Just t -> Just t
+                                _      -> Nothing
+        _            -> Nothing
+
 
 
 typecheck :: Expr -> Expr

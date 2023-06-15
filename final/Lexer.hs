@@ -16,11 +16,43 @@ data Expr = BTrue
           | Var String
           | Lam String Ty Expr
           | App Expr Expr
+          | Records [(String, Expr)]
+          | GetFromRecord Expr String
           deriving (Show, Eq) 
+
+
+
+-- Exemplos de expressões usando Records sem o GetFromRecord
+
+-- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)] = ("<label>", <expr>)
+-- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].a = Num 1
+-- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].b = Num 2
+-- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].c = Num 3
+-- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].d = error "Label not found!"
+-- Add (Num 1) (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].c) = Add (Num 1) (Num 3)
+
+
+-- DÚVIDA --
+-- Records [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Add (Num 1) (Num 2)
+-- ou
+-- Records [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Num 3
+
+-- Exemplos de expressões usando Records com o GetFromRecord
+
+
+-- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "a" = Num 1
+-- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "b" = Num 2
+-- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "c" = Num 3
+-- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "d" = error "Label not found!"
+
+
+
+
 
 data Ty = TBool
         | TNum
         | TFun Ty Ty
+        | TRecord [(String, Ty)]
         deriving (Show, Eq)
 
 
