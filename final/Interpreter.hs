@@ -5,18 +5,20 @@ import Parser
 
 
 
-
-
-
 isValue :: Expr -> Bool
 isValue BTrue = True
 isValue BFalse = True
 isValue (Num n) = True
 isValue (Lam _ _ _) = True
+
+-- Usando all
+isValue (Record lista) = all (\(label, expressao) -> isValue expressao) lista
+
+-- Usando recursão
+-- isValue (Record []) = True
+-- isValue (Record ((label, expressao):resto)) = isValue expressao && isValue (Record resto)
+
 isValue _ = False
-
-
-
 
 
 
@@ -33,6 +35,9 @@ step (Mul e1 e2) = Mul (step e1) e2
 step (And BFalse e2) = BFalse
 step (And BTrue e2) = e2
 step (And e1 e2) = And (step e1) e2
+step (Not BTrue) = BFalse
+step (Not BFalse) = BTrue
+step (Not e) = Not (step e)
 step (Or BTrue _) = BTrue
 step (Or _ BTrue) = BTrue
 step (Or e1 e2) = Or (step e1) e2
@@ -42,19 +47,22 @@ step (Xor e1 e2) = Xor (step e1) e2
 step (If BTrue e1 e2) = e1
 step (If BFalse e1 e2) = e2
 step (If e1 e2 e3) = If (step e1) e2 e3
-step (App (Lam x t e1) e2)| isValue e2 = subst x e2 e1
-                          | otherwise = App (Lam x t e1) (step e2)
+step (App (Lam x t e1) e2)  | isValue e2 = subst x e2 e1
+                            | otherwise = App (Lam x t e1) (step e2)
 step (App e1 e2) = App (step e1) e2
-step (GetFromRecord (Records []) alvo) = GetFromRecord (Records []) alvo
-step (GetFromRecord (Records ((label, expressao):resto)) alvo) | label == alvo = expressao
-                                                               | otherwise = GetFromRecord (Records resto) alvo
-step (GetFromRecord e label) = GetFromRecord (step e) label
+step (GetFromRecord (Record ((label, expressao):resto)) alvo) | label == alvo = expressao
+                                                               | otherwise = step (GetFromRecord (Record resto) alvo)
+step (GetFromRecord (Record []) alvo) = GetFromRecord (Record []) alvo
+
+
+
+-- step (GetFromRecord e label) = GetFromRecord (step e) label
 
 
 -- Para testar:
--- step (Records [("nome", Var "Andrew"), ("idade", Num 20)])
--- Records [("nome",Var "Andrew"),("idade",Num 20)] -------------------------------------isso é valido?
--- step (GetFromRecord (Records [("nome", Var "Andrew"), ("idade", Num 20)]) "nome")
+-- step (Record [("nome", Var "Andrew"), ("idade", Num 20)])
+-- Record [("nome",Var "Andrew"),("idade",Num 20)] -------------------------------------isso é valido?
+-- step (GetFromRecord (Record [("nome", Var "Andrew"), ("idade", Num 20)]) "nome")
 -- Var "Andrew"
 
 
@@ -81,6 +89,7 @@ subst x n (Mul e1 e2) = Mul (subst x n e1) (subst x n e2)
 subst x n (And e1 e2) = And (subst x n e1) (subst x n e2)
 subst x n (Or e1 e2) = Or (subst x n e1) (subst x n e2)
 subst x n (Xor e1 e2) = Xor (subst x n e1) (subst x n e2)
+subst x n (Not e) = Not (subst x n e)
 subst x n (If e1 e2 e3) = If (subst x n e1) (subst x n e2) (subst x n e3)
 subst x n (Var v) | x == v = n
                   | otherwise = Var v

@@ -2,13 +2,15 @@ module Lexer where
 
 import Data.Char
 
--- Árvore
+-- data Record = Record [(String, Expr)] deriving (Show, Eq)
+
 data Expr = BTrue
           | BFalse
           | Num Int
-          | Records [(String, Expr)]
+          | Record [(String, Expr)]
           | Add Expr Expr
           | And Expr Expr
+          | Not Expr
           | Sub Expr Expr
           | Mul Expr Expr
           | If Expr Expr Expr
@@ -22,28 +24,28 @@ data Expr = BTrue
 
 
 
--- Exemplos de expressões usando Records sem o GetFromRecord
+-- Exemplos de expressões usando Record sem o GetFromRecord
 
--- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)] = ("<label>", <expr>)
--- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].a = Num 1
--- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].b = Num 2
--- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].c = Num 3
--- Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].d = error "Label not found!"
--- Add (Num 1) (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)].c) = Add (Num 1) (Num 3)
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)] = ("<label>", <expr>)
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].a = Num 1
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].b = Num 2
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].c = Num 3
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].d = error "Label not found!"
+-- Add (Num 1) (Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].c) = Add (Num 1) (Num 3)
 
 
 -- DÚVIDA --
--- Records [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Add (Num 1) (Num 2)
+-- Record [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Add (Num 1) (Num 2)
 -- ou
--- Records [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Num 3
+-- Record [("a", Num 1), ("b", Num 2), ("soma", Add (Num 1) (Num 2))].soma = Num 3
 
--- Exemplos de expressões usando Records com o GetFromRecord
+-- Exemplos de expressões usando Record com o GetFromRecord
 
 
--- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "a" = Num 1
--- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "b" = Num 2
--- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "c" = Num 3
--- GetFromRecord (Records [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "d" = error "Label not found!"
+-- GetFromRecord (Record [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "a" = Num 1
+-- GetFromRecord (Record [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "b" = Num 2
+-- GetFromRecord (Record [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "c" = Num 3
+-- GetFromRecord (Record [("a", Num 1), ("b", Num 2), ("c", Num 3)]) "d" = error "Label not found!"
 
 
 
@@ -51,7 +53,7 @@ data Expr = BTrue
 
 data Ty = TBool
         | TNum
-        | TRecord
+        | TRecord [(String, Ty)]
         | TFun Ty Ty
         deriving (Show, Eq)
 
@@ -74,9 +76,10 @@ data Token = TokenTrue
 
 
 
-
 isToken :: Char -> Bool
 isToken c =  c `elem` "+-*&|^"
+
+
 
 lexer :: String -> [Token]
 lexer [] = []
@@ -93,6 +96,7 @@ lexNum cs = case span isDigit cs of
               (num, rest) -> TokenNum (read num) : lexer rest
 
 
+
 lexKW :: String -> [Token]
 lexKW cs = case span isAlpha cs of
               ("true", rest) -> TokenTrue : lexer rest
@@ -101,6 +105,7 @@ lexKW cs = case span isAlpha cs of
               ("then", rest) -> TokenThen : lexer rest
               ("else", rest) -> TokenElse : lexer rest
               _ -> error "Lexical error: invalid keyword!"
+
 
 
 lexSymbol :: String -> [Token]
@@ -112,9 +117,3 @@ lexSymbol cs = case span isToken cs of
                 ("||", rest) -> TokenOr : lexer rest
                 ("^", rest) -> TokenXor : lexer rest
                 _ -> error "Lexical error: invalid symbol!"
-
-                
-
-              
-
-      
