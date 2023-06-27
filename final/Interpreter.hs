@@ -8,17 +8,17 @@ import Parser
 isValue :: Expr -> Bool
 isValue BTrue = True
 isValue BFalse = True
-isValue (Num n) = True
+isValue (Num _) = True
+isValue (Var _) = True
 isValue (Lam _ _ _) = True
-
--- Usando all
-isValue (Record lista) = all (\(label, expressao) -> isValue expressao) lista
-
--- Usando recursão
--- isValue (Record []) = True
--- isValue (Record ((label, expressao):resto)) = isValue expressao && isValue (Record resto)
-
+isValue (Record lista) = all (\(label, expressao) -> isValue expressao) lista -- Usando all {verifica se todos os elementos da lista satisfazem a condição}
 isValue _ = False
+
+isBool :: Expr -> Bool
+isBool BTrue = True
+isBool BFalse = True
+isBool _ = False
+
 
 
 
@@ -35,9 +35,6 @@ step (Mul e1 e2) = Mul (step e1) e2
 step (And BFalse e2) = BFalse
 step (And BTrue e2) = e2
 step (And e1 e2) = And (step e1) e2
-step (Not BTrue) = BFalse
-step (Not BFalse) = BTrue
-step (Not e) = Not (step e)
 step (Or BTrue _) = BTrue
 step (Or _ BTrue) = BTrue
 step (Or e1 e2) = Or (step e1) e2
@@ -50,9 +47,30 @@ step (If e1 e2 e3) = If (step e1) e2 e3
 step (App (Lam x t e1) e2)  | isValue e2 = subst x e2 e1
                             | otherwise = App (Lam x t e1) (step e2)
 step (App e1 e2) = App (step e1) e2
-step (GetFromRecord (Record ((label, expressao):resto)) alvo) | label == alvo = expressao
-                                                               | otherwise = step (GetFromRecord (Record resto) alvo)
-step (GetFromRecord (Record []) alvo) = GetFromRecord (Record []) alvo
+step (Not BTrue) = BFalse
+step (Not BFalse) = BTrue
+step (Not e) = Not (step e)
+step (Maior (Num n1) (Num n2)) = if n1 > n2 then BTrue else BFalse
+step (Maior (Num n) e2) = Maior (Num n) (step e2)
+step (Maior e1 e2) = Maior (step e1) e2
+step (Menor (Num n1) (Num n2)) = if n1 < n2 then BTrue else BFalse
+step (Menor (Num n) e2) = Menor (Num n) (step e2)
+step (Menor e1 e2) = Menor (step e1) e2
+
+step (Igual (Num n1) (Num n2)) = if n1 == n2 then BTrue else BFalse
+step (Igual (Num n) e2) = Igual (Num n) (step e2)
+step (Igual e1 e2) | isBool e1 && isBool e2 = if e1 == e2 then BTrue else BFalse
+                   | otherwise = Igual (step e1) e2
+step (Let x e1 e2) | isValue e1 = subst x e1 e2
+                   | otherwise = Let x (step e1) e2
+step (ProjRecord (Record lista) label) = case lookup label lista of
+                                            Just e -> e
+                                            Nothing -> error "Label não encontrada"
+step (ProjRecord e label) = ProjRecord (step e) label                  
+
+-- step (GetFromRecord (Record ((label, expressao):resto)) alvo) | label == alvo = expressao
+--                                                                | otherwise = step (GetFromRecord (Record resto) alvo)
+-- step (GetFromRecord (Record []) alvo) = GetFromRecord (Record []) alvo
 
 
 
@@ -89,12 +107,17 @@ subst x n (Mul e1 e2) = Mul (subst x n e1) (subst x n e2)
 subst x n (And e1 e2) = And (subst x n e1) (subst x n e2)
 subst x n (Or e1 e2) = Or (subst x n e1) (subst x n e2)
 subst x n (Xor e1 e2) = Xor (subst x n e1) (subst x n e2)
-subst x n (Not e) = Not (subst x n e)
 subst x n (If e1 e2 e3) = If (subst x n e1) (subst x n e2) (subst x n e3)
 subst x n (Var v) | x == v = n
                   | otherwise = Var v
 subst x n (Lam v t e) = Lam v t (subst x n e)
 subst x n (App e1 e2) = App (subst x n e1) (subst x n e2)
+subst x n (Not e) = Not (subst x n e)
+subst x n (Maior e1 e2) = Maior (subst x n e1) (subst x n e2)
+subst x n (Menor e1 e2) = Menor (subst x n e1) (subst x n e2)
+subst x n (Igual e1 e2) = Igual (subst x n e1) (subst x n e2)
+subst x n (Record lista) = Record (map (\(label, expressao) -> (label, subst x n expressao)) lista)
+subst x n (Let v e1 e2) = Let v (subst x n e1) (subst x n e2)
 
 
 

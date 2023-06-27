@@ -40,10 +40,6 @@ typeof ctx (Xor e1 e2) =
     case (typeof ctx e1, typeof ctx e2) of
         (Just TBool, Just TBool) -> Just TBool
         _                        -> Nothing
-typeof ctx (Not e) = 
-    case typeof ctx e of
-        Just TBool -> Just TBool
-        _          -> Nothing
 typeof ctx (If e1 e2 e3) =
     case typeof ctx e1 of 
       (Just TBool) -> case (typeof ctx e2, typeof ctx e3) of
@@ -63,11 +59,38 @@ typeof ctx (App e1 e2) =
                                             Just t2
                                          else
                                             Nothing
+typeof ctx (Not e) = 
+    case typeof ctx e of
+        Just TBool -> Just TBool
+        _          -> Nothing
+typeof ctx (Let v e1 e2) = case typeof ctx e1 of
+                              Just t1 -> typeof ((v, t1):ctx) e2
+                              _       -> Nothing
+typeof ctx (Maior e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
+        (Just TNum, Just TNum)   -> Just TBool
+        _                        -> Nothing
+typeof ctx (Menor e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
+        (Just TNum, Just TNum)   -> Just TBool
+        _                        -> Nothing
+typeof ctx (Igual e1 e2) = 
+    case (typeof ctx e1, typeof ctx e2) of
+        (Just TNum, Just TNum)   -> Just TBool
+        _                        -> Nothing        
 typeof ctx (Record lista) = Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
-typeof ctx (GetFromRecord (Record lista) alvo) = case lookup alvo lista ofxz
+typeof ctx (ProjRecord (Record lista) alvo) = case (typeof ctx (Record lista)) of
+                                                Just (TRecord lista) -> case lookup alvo lista of
+                                                                          Just t -> Just t
+                                                                          _      -> Nothing
+                                                _                     -> Nothing
 
-                                                    Just t -> Just t
-                                                    _      -> Nothing
+
+-- typeof ctx (Record lista) = Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
+-- typeof ctx (GetFromRecord (Record lista) alvo) = case lookup alvo lista ofxz
+
+--                                                     Just t -> Just t
+--                                                     _      -> Nothing
 
 
 

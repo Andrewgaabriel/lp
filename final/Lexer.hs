@@ -7,10 +7,8 @@ import Data.Char
 data Expr = BTrue
           | BFalse
           | Num Int
-          | Record [(String, Expr)]
           | Add Expr Expr
           | And Expr Expr
-          | Not Expr
           | Sub Expr Expr
           | Mul Expr Expr
           | If Expr Expr Expr
@@ -19,7 +17,13 @@ data Expr = BTrue
           | Var String
           | Lam String Ty Expr
           | App Expr Expr
-          | GetFromRecord Expr String
+          | Record [(String, Expr)]
+          | ProjRecord Expr String
+          | Let String Expr Expr
+          | Maior Expr Expr
+          | Menor Expr Expr
+          | Igual Expr Expr
+          | Not Expr
           deriving (Show, Eq) 
 
 
