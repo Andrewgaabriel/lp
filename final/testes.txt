@@ -1,0 +1,19 @@
+let j = Let ("a") (Mul (Num 5) (Num 5)) (Add (Var "a") (Num 10))
+eval j
+
+
+step (Igual  (Num 10) (Num 10)) 
+step (Menor  (Num 10) (Num 10)) 
+step (Maior  (Num 10) (Num 10)) 
+step (Not BFalse) 
+
+
+let i = Record [  ("x",Num 10), ("y",Num 11), ("z", Num 30), ("a", (Mul  (Add (Num 10)(Num 1))   (Num 2)  )) ]
+eval (ProjRecord i "a")
+eval ( ProjRecord (Record [("x",Num 10), ("y",Num 11), ("z", BFalse), ("a", (Mul  (Add (Num 10)(Num 1))   (Num 2)  )) ]) "z" )
+
+
+{ a=10 , b=false, c=25 }
+
+
+{ a=10 , b=false, c=25 }.b 

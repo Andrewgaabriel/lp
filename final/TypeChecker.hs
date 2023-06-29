@@ -16,6 +16,7 @@ typeof :: Ctx -> Expr -> Maybe Ty
 typeof ctx BTrue = Just TBool
 typeof ctx BFalse = Just TBool
 typeof ctx (Num _) = Just TNum
+
 typeof ctx (Add e1 e2) = 
     case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
@@ -59,38 +60,40 @@ typeof ctx (App e1 e2) =
                                             Just t2
                                          else
                                             Nothing
-typeof ctx (Not e) = 
-    case typeof ctx e of
-        Just TBool -> Just TBool
-        _          -> Nothing
-typeof ctx (Let v e1 e2) = case typeof ctx e1 of
-                              Just t1 -> typeof ((v, t1):ctx) e2
-                              _       -> Nothing
+typeof ctx (Not e) = case (typeof ctx e) of
+                          (Just TBool) -> Just TBool
+                          _            -> Nothing
+-- v = variavel que vai ser definida                          
+-- e1 = expressao que vai ser avaliada e atribuida a v
+-- e2 = expressao que vai ser avaliada com a variavel v definida
+-- Exemplo de uso:
+    -- let x = 10 in x + 1
+    -- let x = 10+1 in x + 1
+typeof ctx (Let v e1 e2) =
+      case (typeof ctx e1) of
+           (Just t1) -> typeof ((v, t1):ctx) e2
+           _         -> Nothing
 typeof ctx (Maior e1 e2) = 
-    case (typeof ctx e1, typeof ctx e2) of
-        (Just TNum, Just TNum)   -> Just TBool
-        _                        -> Nothing
+      case (typeof ctx e1, typeof ctx e2) of
+           (Just TNum, Just TNum)  -> Just TNum
+           _                       -> Nothing
 typeof ctx (Menor e1 e2) = 
-    case (typeof ctx e1, typeof ctx e2) of
-        (Just TNum, Just TNum)   -> Just TBool
-        _                        -> Nothing
+      case (typeof ctx e1, typeof ctx e2) of
+           (Just TNum, Just TNum)   -> Just TNum
+           _                        -> Nothing
 typeof ctx (Igual e1 e2) = 
-    case (typeof ctx e1, typeof ctx e2) of
-        (Just TNum, Just TNum)   -> Just TBool
-        _                        -> Nothing        
-typeof ctx (Record lista) = Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
-typeof ctx (ProjRecord (Record lista) alvo) = case (typeof ctx (Record lista)) of
-                                                Just (TRecord lista) -> case lookup alvo lista of
-                                                                          Just t -> Just t
-                                                                          _      -> Nothing
-                                                _                     -> Nothing
-
-
+      case (typeof ctx e1, typeof ctx e2) of
+           (Just TNum, Just TNum)   -> Just TNum
+           _                        -> Nothing        
 -- typeof ctx (Record lista) = Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
--- typeof ctx (GetFromRecord (Record lista) alvo) = case lookup alvo lista ofxz
-
---                                                     Just t -> Just t
---                                                     _      -> Nothing
+typeof ctx (Record lista) = case (typeof ctx (Record lista)) of
+                            Just (TRecord lista) -> Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
+                            _                    -> Nothing
+typeof ctx (ProjRecord (Record lista) alvo) = case (typeof ctx (Record lista)) of
+                                              Just (TRecord lista) -> case (lookup alvo lista) of
+                                                                           (Just t) -> Just t
+                                                                           _        -> Nothing
+                                                    _                     -> Nothing
 
 
 

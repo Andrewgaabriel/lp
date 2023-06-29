@@ -30,8 +30,13 @@ data Expr = BTrue
 
 -- Exemplos de expressões usando Record sem o GetFromRecord
 
--- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)] = ("<label>", <expr>)
--- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].a = Num 1
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)] 
+
+
+-- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)] = Num 1
+
+
+-- = ("<label>", <expr>)
 -- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].b = Num 2
 -- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].c = Num 3
 -- Record [("a", Num 1), ("b", Num 2), ("c", Num 3)].d = error "Label not found!"
@@ -76,12 +81,30 @@ data Token = TokenTrue
           |  TokenIf
           |  TokenThen
           |  TokenElse
+          |  TokenVar String
+          |  TokenLam
+          |  TokenApp
+          |  TokenRecord
+          |  TokenProjRecord
+          |  TokenLet
+          |  TokenIn
+          |  TokenMaior
+          |  TokenMenor
+          |  TokenIgual
+          |  TokenNot
+          |  TokenAtrib
+          |  TokenLBrace
+          |  TokenRBrace
+          |  TokenVirgula
+          |  TokenPonto
+          |  TokenArrow
+          |  TokenBool
           deriving (Show, Eq)
 
 
 
 isToken :: Char -> Bool
-isToken c =  c `elem` "+-*&|^"
+isToken c =  c `elem` "+-*&|^<=>!{},."
 
 
 
@@ -108,7 +131,12 @@ lexKW cs = case span isAlpha cs of
               ("if", rest) -> TokenIf : lexer rest
               ("then", rest) -> TokenThen : lexer rest
               ("else", rest) -> TokenElse : lexer rest
-              _ -> error "Lexical error: invalid keyword!"
+              ("lam", rest) -> TokenLam : lexer rest
+              ("let", rest) -> TokenLet : lexer rest
+              ("in", rest) -> TokenIn : lexer rest
+              ("bool", rest) -> TokenBool : lexer rest
+        --       _ -> error "Lexical error: invalid keyword!"
+              (var , rest) -> TokenVar var : lexer rest
 
 
 
@@ -120,4 +148,14 @@ lexSymbol cs = case span isToken cs of
                 ("&&", rest) -> TokenAnd : lexer rest
                 ("||", rest) -> TokenOr : lexer rest
                 ("^", rest) -> TokenXor : lexer rest
+                (">", rest) -> TokenMaior : lexer rest
+                ("<", rest) -> TokenMenor : lexer rest
+                ("==", rest) -> TokenIgual : lexer rest
+                ("=", rest) -> TokenAtrib : lexer rest
+                ("!", rest) -> TokenNot : lexer rest
+                ("{", rest) -> TokenLBrace : lexer rest
+                ("}", rest) -> TokenRBrace : lexer rest
+                (",", rest) -> TokenVirgula : lexer rest
+                (".", rest) -> TokenPonto : lexer rest
+                ("->", rest) -> TokenArrow : lexer rest
                 _ -> error "Lexical error: invalid symbol!"
