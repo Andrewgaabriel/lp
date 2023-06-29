@@ -99,6 +99,7 @@ data Token = TokenTrue
           |  TokenPonto
           |  TokenArrow
           |  TokenBool
+          |  TokenPipe
           deriving (Show, Eq)
 
 
@@ -158,4 +159,5 @@ lexSymbol cs = case span isToken cs of
                 (",", rest) -> TokenVirgula : lexer rest
                 (".", rest) -> TokenPonto : lexer rest
                 ("->", rest) -> TokenArrow : lexer rest
+                ("|", rest) -> TokenPipe : lexer rest
                 _ -> error "Lexical error: invalid symbol!"

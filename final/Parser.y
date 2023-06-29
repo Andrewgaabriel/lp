@@ -35,6 +35,7 @@ import Lexer
     '.'                {    TokenPonto    }
     "->"               {    TokenArrow     }
     ','                {    TokenVirgula     }
+    '|'                {    TokenPipe     }
     bool             {    TokenBool      }
 
 %%
@@ -56,8 +57,8 @@ Exp   : num                                 {   Num $1              }
       | Exp "==" Exp                        {   Igual $1 $3         }
       | "let" var '=' Exp "in" Exp          {   Let $2 $4 $6        }
       | "lam" var '<' Tipo '>' "->" Exp     {   Lam $2 $4 $7        }
-      | Exp Exp                             {   App $1 $2           }
-      | '{' Records '}'                   {   Record $2           }
+      | Exp '|' Exp                         {   App $1 $3           }
+      | '{' Records '}'                     {   Record $2           }
       | Exp '.' var                         {   ProjRecord $1 $3    }
 
 

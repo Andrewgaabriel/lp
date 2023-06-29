@@ -1,0 +1,1 @@
+{ x = 10 , y = 20+20 , z = 30, idade = 10, valor = false } . valor
