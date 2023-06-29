@@ -16,7 +16,6 @@ typeof :: Ctx -> Expr -> Maybe Ty
 typeof ctx BTrue = Just TBool
 typeof ctx BFalse = Just TBool
 typeof ctx (Num _) = Just TNum
-
 typeof ctx (Add e1 e2) = 
     case (typeof ctx e1, typeof ctx e2) of
         (Just TNum, Just TNum)   -> Just TNum
@@ -84,16 +83,25 @@ typeof ctx (Menor e1 e2) =
 typeof ctx (Igual e1 e2) = 
       case (typeof ctx e1, typeof ctx e2) of
            (Just TNum, Just TNum)   -> Just TNum
-           _                        -> Nothing        
--- typeof ctx (Record lista) = Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
-typeof ctx (Record lista) = case (typeof ctx (Record lista)) of
-                            Just (TRecord lista) -> Just (TRecord (map (\(label, expressao) -> (label, typeof ctx expressao)) lista))
-                            _                    -> Nothing
-typeof ctx (ProjRecord (Record lista) alvo) = case (typeof ctx (Record lista)) of
-                                              Just (TRecord lista) -> case (lookup alvo lista) of
-                                                                           (Just t) -> Just t
-                                                                           _        -> Nothing
-                                                    _                     -> Nothing
+           _                        -> Nothing    
+-- Retorna o tipo do elemento que está procurando na lista    
+typeof ctx (ProjRecord lista label) =
+    case typeof ctx lista of
+        Just (TRecord fields) -> lookup label fields
+        _                     -> Nothing
+-- Ele percorre a lista de record e verifica se todos os elementos sao do tipo correto
+-- Ele retorna o tipo do record e o tipo de cada elemento da lista
+typeof ctx (Record lista) =
+    if all (\(_, expr) -> case typeof ctx expr of Just _ -> True; _ -> False) lista
+        then Just (TRecord (map (\(label, expr) -> (label, getType ctx expr)) lista))
+        else Nothing
+  where
+    getType :: Ctx -> Expr -> Ty
+    getType ctx expr = case typeof ctx expr of Just ty -> ty
+
+
+
+
 
 
 
